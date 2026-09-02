@@ -609,7 +609,7 @@ function ToolCard({
                     className={cn(
                       "ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium",
                       output.preview.status.startsWith("Publi")
-                        ? "bg-success-soft text-success"
+                        ? "bg-success text-success-foreground"
                         : "bg-muted text-muted-foreground",
                     )}
                   >
