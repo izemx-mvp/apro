@@ -246,7 +246,7 @@ export function CopiloteChat({ compact = false }: { compact?: boolean }) {
     >
       <div className={cn("min-h-0 flex-1 space-y-4 overflow-y-auto p-4", compact ? "text-sm" : "")}>
         {messages.length === 0 && (
-          <div className="space-y-4 py-6 text-center">
+          <div className="space-y-5 py-4 text-center">
             <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
               <Sparkles className="h-5 w-5" />
             </span>
@@ -257,20 +257,25 @@ export function CopiloteChat({ compact = false }: { compact?: boolean }) {
                 client — en langage naturel.
               </p>
             </div>
-            <div className="mx-auto flex max-w-lg flex-wrap justify-center gap-2">
-              {SUGGESTIONS.map((sug) => (
-                <button
-                  key={sug}
-                  type="button"
-                  onClick={() => void sendMessage({ text: sug })}
-                  className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent hover:text-accent"
-                >
-                  {sug}
-                </button>
+            <div
+              className={cn(
+                "mx-auto grid max-w-3xl gap-3 text-left",
+                compact ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+              )}
+            >
+              {SCENARIOS.map((s, i) => (
+                <ScenarioCard
+                  key={s.prompt}
+                  scenario={s}
+                  index={i}
+                  disabled={busy}
+                  onPick={() => void sendMessage({ text: s.prompt })}
+                />
               ))}
             </div>
           </div>
         )}
+
 
         {messages.map((m) => (
           <MessageRow
