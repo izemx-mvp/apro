@@ -29,128 +29,19 @@ export const Route = createFileRoute("/copilote")({
   component: CopilotePage,
 });
 
-type Msg = { from: "user" | "agent"; text: string; table?: { label: string; value: string }[] };
-
-const initialMessages: Msg[] = [
-  {
-    from: "user",
-    text: "Donne-moi le bilan des ventes du mois de juillet",
-  },
-  {
-    from: "agent",
-    text: "Voici le bilan des ventes de juillet 2026 extrait d'Odoo :",
-    table: [
-      { label: "Chiffre d'affaires", value: formatMAD(1284500) },
-      { label: "Commandes validées", value: "47" },
-      { label: "Panier moyen", value: formatMAD(27330) },
-      { label: "Taux d'acceptation devis", value: "62 %" },
-    ],
-  },
-];
-
 function CopilotePage() {
-  const [messages, setMessages] = useState<Msg[]>(initialMessages);
-  const [input, setInput] = useState("");
   const [rules, setRules] = useState(automationRules);
   const [log, setLog] = useState<(typeof automations)[number] | null>(null);
-
-  const send = () => {
-    if (!input.trim()) return;
-    const question = input.trim();
-    setInput("");
-    setMessages((m) => [...m, { from: "user", text: question }]);
-    setTimeout(() => {
-      setMessages((m) => [
-        ...m,
-        {
-          from: "agent",
-          text: `Requête traitée sur Odoo : « ${question} ». Voici la synthèse :`,
-          table: [
-            { label: "Enregistrements analysés", value: "312" },
-            { label: "Références concernées", value: "18" },
-            { label: "Alertes détectées", value: "2" },
-          ],
-        },
-      ]);
-    }, 500);
-  };
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
       <div className="space-y-6">
         <SectionCard
-          title="Copilote Odoo"
-          description="Posez une question ou dictez une commande vocale"
+          title="Copilote IA — centre de commande"
+          description="Consultez, créez, modifiez ou supprimez vos données et pilotez le site web du client en langage naturel"
         >
-          <div className="flex h-[380px] flex-col gap-4 overflow-y-auto pr-1">
-            {messages.map((m, i) => (
-              <div key={i} className={cn("flex gap-3", m.from === "user" && "flex-row-reverse")}>
-                <div
-                  className={cn(
-                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-                    m.from === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-accent-soft text-accent",
-                  )}
-                >
-                  {m.from === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                </div>
-                <div className={cn("max-w-[80%] space-y-2", m.from === "user" && "text-right")}>
-                  <p
-                    className={cn(
-                      "inline-block rounded-lg px-3 py-2 text-sm",
-                      m.from === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground",
-                    )}
-                  >
-                    {m.text}
-                  </p>
-                  {m.table && (
-                    <div className="overflow-hidden rounded-lg border border-border text-left">
-                      <table className="w-full text-sm">
-                        <tbody>
-                          {m.table.map((r, j) => (
-                            <tr
-                              key={j}
-                              className={cn(
-                                "border-b border-border last:border-0",
-                                j % 2 === 1 && "bg-muted/40",
-                              )}
-                            >
-                              <td className="px-3 py-2 text-muted-foreground">{r.label}</td>
-                              <td className="px-3 py-2 text-right font-semibold text-foreground">
-                                {r.value}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 flex items-center gap-2 border-t border-border pt-4">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder="Ex : Vérifie le stock des produits de nettoyage sol"
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Commande vocale"
-              onClick={() => toast.success("Écoute vocale activée…")}
-            >
-              <Mic className="h-4 w-4" />
-            </Button>
-            <Button size="icon" aria-label="Envoyer" onClick={send}>
-              <Send className="h-4 w-4" />
-            </Button>
+          <div className="h-[560px] overflow-hidden rounded-xl border border-border">
+            <CopiloteChat />
           </div>
         </SectionCard>
 
