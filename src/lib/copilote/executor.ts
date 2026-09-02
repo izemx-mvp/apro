@@ -45,10 +45,17 @@ function localWpFallback(name: AiToolName, args: ToolArgs, ctx: ExecCtx): ToolRe
       text: "Aucun site WordPress réel n'est connecté. Je travaille sur l'espace de démonstration interne.",
       table: [
         { label: "Site de démonstration", value: ctx.state.wp.url },
+        { label: "Thème", value: ctx.state.wp.theme ?? "—" },
         { label: "Pages", value: String(ctx.state.wp.pages.length) },
         { label: "Articles", value: String(ctx.state.wp.posts.length) },
         { label: "Médias", value: String(ctx.state.wp.media.length) },
       ],
+      gallery: ctx.state.wp.pages.map((p) => ({
+        file: p.slug,
+        title: p.title,
+        ...(p.cover ? { src: p.cover } : {}),
+        caption: `${p.status} · maj ${p.updatedAt}`,
+      })),
     };
   }
   if (name === "wp_get_page") {
