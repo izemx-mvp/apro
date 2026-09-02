@@ -304,7 +304,32 @@ export function CopiloteChat({ compact = false }: { compact?: boolean }) {
         <div ref={endRef} />
       </div>
 
+      {messages.length > 0 && (
+        <div className="border-t border-border/70 bg-muted/20 px-3 py-2">
+          <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {SCENARIOS.map((s) => (
+              <button
+                key={s.prompt}
+                type="button"
+                disabled={busy}
+                onClick={() => void sendMessage({ text: s.prompt })}
+                className="press group flex shrink-0 items-center gap-2 rounded-full border border-border bg-card py-1 pr-3 pl-1 text-xs whitespace-nowrap text-muted-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+              >
+                <img
+                  src={s.image}
+                  alt=""
+                  aria-hidden
+                  className="h-6 w-6 rounded-full object-cover ring-1 ring-border"
+                />
+                <span className="font-medium">{s.title}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className={cn("border-t border-border p-3", dragging && "bg-accent-soft")}>
+
         {uploads.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
             {uploads.map((u, i) => (
