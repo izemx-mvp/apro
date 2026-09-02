@@ -138,21 +138,9 @@ export function CopiloteChat({ compact = false }: { compact?: boolean }) {
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const transport = useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: "/api/chat",
-        prepareSendMessagesRequest: ({ messages }) => ({
-          body: {
-            messages,
-            context: buildContext(ctxRef.current.state),
-            role: ctxRef.current.role,
-            wpConnected: false,
-          },
-        }),
-      }),
-    [],
-  );
+  // Mode démonstration : les réponses sont générées localement à partir des
+  // données de démo — aucun backend ni clé API requis.
+  const transport = useMemo(() => createMockChatTransport(), []);
 
   const run = useCallback(
     async (name: AiToolName, args: Record<string, unknown>) => {
