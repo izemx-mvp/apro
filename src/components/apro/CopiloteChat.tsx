@@ -1,5 +1,5 @@
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from "ai";
+import { lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from "ai";
 import {
   AlertTriangle,
   BarChart3,
@@ -37,7 +37,8 @@ import {
   toolSteps,
   type AiToolName,
 } from "@/lib/copilote/ai-tools";
-import { buildContext, executeTool } from "@/lib/copilote/executor";
+import { executeTool } from "@/lib/copilote/executor";
+import { createMockChatTransport } from "@/lib/copilote/mock-transport";
 import { useCopiloteStore } from "@/lib/copilote/store";
 import type { ToolResult } from "@/lib/copilote/tools";
 import { cn } from "@/lib/utils";
