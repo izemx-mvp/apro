@@ -21,12 +21,38 @@ export type ToolName =
 
 export type ToolArgs = Record<string, string>;
 
+/** Aperçu visuel d'un média du site. */
+export type MediaPreview = {
+  file: string;
+  title: string;
+  src?: string;
+  url?: string;
+  caption?: string;
+  mime?: string;
+};
+
+/** Pré-visualisation d'une page du site (rendu maquette navigateur). */
+export type PagePreview = {
+  site: string;
+  title: string;
+  slug: string;
+  status: string;
+  updatedAt?: string;
+  cover?: string;
+  blocks: { label: string; type: "texte" | "image"; value: string; src?: string; changed?: boolean }[];
+};
+
 export type ToolResult = {
   ok: boolean;
   text: string;
   table?: { label: string; value: string }[];
   rows?: { headers: string[]; data: string[][] };
+  /** Galerie d'images / fichiers du site à pré-visualiser. */
+  gallery?: MediaPreview[];
+  /** Maquette de la page concernée. */
+  preview?: PagePreview;
 };
+
 
 export type ToolCtx = {
   state: CopiloteState;
