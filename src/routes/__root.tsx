@@ -16,6 +16,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/apro/AppShell";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { NotificationsProvider } from "@/lib/notifications";
+import { CopiloteStoreProvider } from "@/lib/copilote/store";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -161,7 +162,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <NotificationsProvider>
-          <Gate />
+          <CopiloteStoreProvider>
+            <Gate />
+          </CopiloteStoreProvider>
         </NotificationsProvider>
       </AuthProvider>
       <Toaster />
