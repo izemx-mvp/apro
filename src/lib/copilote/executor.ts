@@ -66,7 +66,11 @@ function localWpFallback(name: AiToolName, args: ToolArgs, ctx: ExecCtx): ToolRe
 
   const mapped = localWpName[name];
   if (!mapped) return { ok: false, text: "Action indisponible sur l'espace de démonstration." };
-  return runTool(mapped, args, ctx);
+  const localArgs: ToolArgs =
+    name === "wp_replace_image" && ctx.upload
+      ? { ...args, file: ctx.upload.name, src: ctx.upload.dataUrl }
+      : args;
+  return runTool(mapped, localArgs, ctx);
 }
 
 /** Exécute un outil demandé par l'IA : permissions → couche d'exécution → vérification. */
