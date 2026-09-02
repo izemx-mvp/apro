@@ -499,24 +499,52 @@ export function runTool(name: ToolName, args: ToolArgs, ctx: ToolCtx): ToolResul
       if (kind === "articles") {
         return {
           ok: true,
-          text: "Articles du site apro.ma :",
-          rows: { headers: ["Titre", "Statut", "Date"], data: state.wp.posts.map((p) => [p.title, p.status, p.date]) },
+          text: `Articles du blog ${state.wp.url} (${state.wp.posts.length}) :`,
+          rows: {
+            headers: ["Titre", "Catégorie", "Statut", "Date"],
+            data: state.wp.posts.map((p) => [p.title, p.category ?? "—", p.status, p.date]),
+          },
+          gallery: state.wp.posts.map((p) => ({
+            file: p.slug,
+            title: p.title,
+            ...(p.cover ? { src: p.cover } : {}),
+            caption: `${p.status} · ${p.date}${p.readingTime ? ` · ${p.readingTime}` : ""}`,
+          })),
         };
       }
       if (kind === "medias") {
         return {
           ok: true,
-          text: "Médias du site apro.ma :",
-          rows: { headers: ["Fichier", "Titre", "Utilisé sur"], data: state.wp.media.map((m) => [m.file, m.title, m.usedIn]) },
+          text: `Médiathèque de ${state.wp.url} (${state.wp.media.length} fichiers) :`,
+          gallery: state.wp.media.map((m) => ({
+            file: m.file,
+            title: m.title,
+            ...(m.src ? { src: m.src } : {}),
+            ...(m.url ? { url: m.url } : {}),
+            ...(m.mime ? { mime: m.mime } : {}),
+            caption: [m.dimensions, m.size, `Utilisé sur ${m.usedIn}`].filter(Boolean).join(" · "),
+          })),
         };
       }
       return {
         ok: true,
-        text: "Pages du site apro.ma :",
+        text: `Pages du site ${state.wp.url} (${state.wp.pages.length}) :`,
         rows: {
-          headers: ["Page", "Adresse", "Statut", "Mise à jour"],
-          data: state.wp.pages.map((p) => [p.title, p.slug, p.status, p.updatedAt]),
+          headers: ["Page", "Adresse", "Statut", "Vues 30 j", "Mise à jour"],
+          data: state.wp.pages.map((p) => [
+            p.title,
+            p.slug,
+            p.status,
+            p.views30d != null ? String(p.views30d) : "—",
+            p.updatedAt,
+          ]),
         },
+        gallery: state.wp.pages.map((p) => ({
+          file: p.slug,
+          title: p.title,
+          ...(p.cover ? { src: p.cover } : {}),
+          caption: `${p.status} · maj ${p.updatedAt}`,
+        })),
       };
     }
 
@@ -528,16 +556,14 @@ export function runTool(name: ToolName, args: ToolArgs, ctx: ToolCtx): ToolResul
       if (!block) return { ok: false, text: "Aucun bloc de texte modifiable sur cette page." };
       const before = block.value;
       const value = args["value"] ?? "";
+      const updated: WpPage = {
+        ...page,
+        updatedAt: today(),
+        blocks: page.blocks.map((b) => (b.id === block.id ? { ...b, value } : b)),
+      };
       update((s) => ({
         ...s,
-        wp: {
-          ...s.wp,
-          pages: s.wp.pages.map((p) =>
-            p.id === page.id
-              ? { ...p, updatedAt: today(), blocks: p.blocks.map((b) => (b.id === block.id ? { ...b, value } : b)) }
-              : p,
-          ),
-        },
+        wp: { ...s.wp, pages: s.wp.pages.map((p) => (p.id === page.id ? updated : p)) },
       }));
       return {
         ok: true,
@@ -547,6 +573,7 @@ export function runTool(name: ToolName, args: ToolArgs, ctx: ToolCtx): ToolResul
           { label: "Avant", value: before },
           { label: "Après", value: value },
         ],
+        preview: pagePreview(state.wp.url, updated, block.id),
       };
     }
 
@@ -556,17 +583,31 @@ export function runTool(name: ToolName, args: ToolArgs, ctx: ToolCtx): ToolResul
       const block = page.blocks.find((b) => b.type === "image");
       if (!block) return { ok: false, text: `La page « ${page.title} » ne contient pas d'image remplaçable.` };
       const file = args["file"] ?? "nouvelle-image.jpg";
+      const src = args["src"];
       const before = block.value;
+      const updated: WpPage = {
+        ...page,
+        updatedAt: today(),
+        ...(src ? { cover: src } : {}),
+        blocks: page.blocks.map((b) => (b.id === block.id ? { ...b, value: file, ...(src ? { src } : {}) } : b)),
+      };
       update((s) => ({
         ...s,
         wp: {
           ...s.wp,
-          media: [{ id: uid("m"), file, title: file, url: `/wp-content/${file}`, usedIn: page.title }, ...s.wp.media],
-          pages: s.wp.pages.map((p) =>
-            p.id === page.id
-              ? { ...p, updatedAt: today(), blocks: p.blocks.map((b) => (b.id === block.id ? { ...b, value: file } : b)) }
-              : p,
-          ),
+          media: [
+            {
+              id: uid("m"),
+              file,
+              title: file,
+              url: `/wp-content/uploads/${file}`,
+              usedIn: page.title,
+              uploadedAt: today(),
+              ...(src ? { src } : {}),
+            },
+            ...s.wp.media,
+          ],
+          pages: s.wp.pages.map((p) => (p.id === page.id ? updated : p)),
         },
       }));
       return {
@@ -577,6 +618,7 @@ export function runTool(name: ToolName, args: ToolArgs, ctx: ToolCtx): ToolResul
           { label: "Ancienne image", value: before },
           { label: "Nouvelle image", value: file },
         ],
+        preview: pagePreview(state.wp.url, updated, block.id),
       };
     }
 
@@ -588,6 +630,8 @@ export function runTool(name: ToolName, args: ToolArgs, ctx: ToolCtx): ToolResul
         slug: `/${norm(title).replace(/\s+/g, "-")}`,
         status: "Brouillon",
         updatedAt: today(),
+        template: "Standard",
+        views30d: 0,
         blocks: [
           { id: uid("b"), label: "Titre principal", type: "texte", value: title },
           { id: uid("b"), label: "Contenu", type: "texte", value: args["content"] ?? "Contenu à compléter." },
@@ -596,11 +640,8 @@ export function runTool(name: ToolName, args: ToolArgs, ctx: ToolCtx): ToolResul
       update((s) => ({ ...s, wp: { ...s.wp, pages: [...s.wp.pages, page] } }));
       return {
         ok: true,
-        text: `Page créée en brouillon sur apro.ma : « ${title} ».`,
-        table: [
-          { label: "Adresse", value: page.slug },
-          { label: "Statut", value: page.status },
-        ],
+        text: `Page créée en brouillon sur ${state.wp.url} : « ${title} ».`,
+        preview: pagePreview(state.wp.url, page),
       };
     }
 
@@ -614,11 +655,36 @@ export function runTool(name: ToolName, args: ToolArgs, ctx: ToolCtx): ToolResul
     case "wp_publish": {
       const page = findPage(state.wp.pages, args["page"] ?? "");
       if (!page) return { ok: false, text: "Page introuvable sur le site." };
+      const updated: WpPage = { ...page, status: "Publiée", updatedAt: today() };
       update((s) => ({
         ...s,
-        wp: { ...s.wp, pages: s.wp.pages.map((p) => (p.id === page.id ? { ...p, status: "Publiée", updatedAt: today() } : p)) },
+        wp: { ...s.wp, pages: s.wp.pages.map((p) => (p.id === page.id ? updated : p)) },
       }));
-      return { ok: true, text: `Page publiée : « ${page.title} » (${page.slug}).` };
+      return {
+        ok: true,
+        text: `Page publiée : « ${page.title} » (${page.slug}).`,
+        preview: pagePreview(state.wp.url, updated),
+      };
     }
   }
 }
+
+/** Construit la maquette d'aperçu d'une page pour l'affichage dans le chat. */
+export function pagePreview(site: string, page: WpPage, changedBlockId?: string): PagePreview {
+  return {
+    site,
+    title: page.title,
+    slug: page.slug,
+    status: page.status,
+    updatedAt: page.updatedAt,
+    ...(page.cover ? { cover: page.cover } : {}),
+    blocks: page.blocks.map((b) => ({
+      label: b.label,
+      type: b.type,
+      value: b.value,
+      ...(b.src ? { src: b.src } : {}),
+      ...(changedBlockId && b.id === changedBlockId ? { changed: true } : {}),
+    })),
+  };
+}
+
