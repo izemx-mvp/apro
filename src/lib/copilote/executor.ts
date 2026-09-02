@@ -2,7 +2,7 @@ import { formatMAD } from "@/lib/apro-data";
 import type { AiToolName } from "./ai-tools";
 import { isWriteTool } from "./ai-tools";
 import type { CopiloteState } from "./store";
-import { runTool, type ToolArgs, type ToolName, type ToolResult } from "./tools";
+import { pagePreview, runTool, type ToolArgs, type ToolName, type ToolResult } from "./tools";
 import { wpAction } from "./wp.functions";
 
 export type ExecCtx = {
