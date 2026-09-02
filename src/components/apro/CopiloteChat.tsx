@@ -407,6 +407,58 @@ export function CopiloteChat({ compact = false }: { compact?: boolean }) {
   );
 }
 
+/* ─────────────── carte de scénario ─────────────── */
+
+function ScenarioCard({
+  scenario,
+  index,
+  disabled,
+  onPick,
+}: {
+  scenario: Scenario;
+  index: number;
+  disabled: boolean;
+  onPick: () => void;
+}) {
+  const Icon = scenario.icon;
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onPick}
+      style={{ animationDelay: `${index * 55}ms` }}
+      className="animate-rise card-glow group relative overflow-hidden rounded-2xl border border-border bg-card text-left disabled:opacity-60"
+    >
+      <div className="relative h-20 overflow-hidden">
+        <img
+          src={scenario.image}
+          alt=""
+          aria-hidden
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/55 to-transparent" />
+        <span
+          className={cn(
+            "absolute bottom-2 left-3 flex h-8 w-8 items-center justify-center rounded-xl shadow-soft backdrop-blur",
+            toneRing[scenario.tone],
+          )}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+      </div>
+      <div className="space-y-0.5 px-3 pt-2 pb-3">
+        <p className="text-sm font-semibold text-foreground">{scenario.title}</p>
+        <p className="text-[11px] leading-snug text-muted-foreground">{scenario.hint}</p>
+        <p className="pt-1 text-[11px] font-medium text-accent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          « {scenario.prompt} »
+        </p>
+      </div>
+    </button>
+  );
+}
+
+
 /* ─────────────── rendu d'un message ─────────────── */
 
 type RowProps = {
