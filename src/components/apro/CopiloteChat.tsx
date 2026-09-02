@@ -31,12 +31,73 @@ import { cn } from "@/lib/utils";
 
 type Upload = { name: string; dataUrl: string; type: string };
 
-const SUGGESTIONS = [
-  "Montre-moi tous les clients",
-  "Crée un client nommé Ahmed Benali",
-  "Quelles pages contient le site web ?",
-  "Bilan d'activité du moment",
+type Scenario = {
+  prompt: string;
+  title: string;
+  hint: string;
+  icon: LucideIcon;
+  image: string;
+  tone: "accent" | "primary" | "success" | "warning";
+};
+
+const SCENARIOS: Scenario[] = [
+  {
+    prompt: "Montre-moi tous les clients",
+    title: "Portefeuille clients",
+    hint: "Liste complète, encours et secteurs",
+    icon: Users,
+    image: equipeImg,
+    tone: "primary",
+  },
+  {
+    prompt: "Crée un client nommé Ahmed Benali",
+    title: "Créer un client",
+    hint: "Fiche créée après confirmation",
+    icon: UserPlus,
+    image: hotellerieImg,
+    tone: "accent",
+  },
+  {
+    prompt: "Quelles pages contient le site web ?",
+    title: "Pages du site",
+    hint: "Aperçu visuel des pages WordPress",
+    icon: Globe,
+    image: heroImg,
+    tone: "success",
+  },
+  {
+    prompt: "Affiche la médiathèque du site",
+    title: "Médiathèque",
+    hint: "Galerie d'images du site client",
+    icon: ImageIcon,
+    image: catalogueImg,
+    tone: "accent",
+  },
+  {
+    prompt: "Bilan d'activité du moment",
+    title: "Bilan d'activité",
+    hint: "Ventes, stock et alertes du jour",
+    icon: BarChart3,
+    image: santeImg,
+    tone: "warning",
+  },
+  {
+    prompt: "Quels produits sont en rupture de stock ?",
+    title: "Alertes de stock",
+    hint: "Produits sous le seuil critique",
+    icon: PackageSearch,
+    image: restaurationImg,
+    tone: "warning",
+  },
 ];
+
+const toneRing: Record<Scenario["tone"], string> = {
+  accent: "text-accent bg-accent-soft",
+  primary: "text-primary bg-primary-soft",
+  success: "text-success bg-success/10",
+  warning: "text-warning bg-warning/10",
+};
+
 
 const readFile = (file: File) =>
   new Promise<Upload>((resolve, reject) => {
