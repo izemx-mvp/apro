@@ -99,6 +99,11 @@ function CopilotePage() {
         </SectionCard>
       </div>
 
+      <div className="space-y-6">
+        <SectionCard title="Actions du Copilote IA" description="Traçabilité des opérations exécutées">
+          <ActionHistory />
+        </SectionCard>
+
       <SectionCard title="Configurer les automatisations" description="Règles actives du copilote">
         <div className="space-y-3">
           {rules.map((r) => (
