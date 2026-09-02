@@ -2,19 +2,32 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from "ai";
 import {
   AlertTriangle,
+  BarChart3,
   Bot,
   Check,
   CheckCircle2,
+  Globe,
+  Image as ImageIcon,
   Loader2,
+  type LucideIcon,
+  PackageSearch,
   Paperclip,
   Send,
   Sparkles,
   Trash2,
   User,
+  UserPlus,
+  Users,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import catalogueImg from "@/assets/wp/catalogue-produits.jpg";
+import equipeImg from "@/assets/wp/equipe-apro.jpg";
+import heroImg from "@/assets/wp/hero-accueil.jpg";
+import hotellerieImg from "@/assets/wp/secteur-hotellerie.jpg";
+import restaurationImg from "@/assets/wp/secteur-restauration.jpg";
+import santeImg from "@/assets/wp/secteur-sante.jpg";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import {
@@ -28,6 +41,7 @@ import { buildContext, executeTool } from "@/lib/copilote/executor";
 import { useCopiloteStore } from "@/lib/copilote/store";
 import type { ToolResult } from "@/lib/copilote/tools";
 import { cn } from "@/lib/utils";
+
 
 type Upload = { name: string; dataUrl: string; type: string };
 
