@@ -2,19 +2,32 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from "ai";
 import {
   AlertTriangle,
+  BarChart3,
   Bot,
   Check,
   CheckCircle2,
+  Globe,
+  Image as ImageIcon,
   Loader2,
+  type LucideIcon,
+  PackageSearch,
   Paperclip,
   Send,
   Sparkles,
   Trash2,
   User,
+  UserPlus,
+  Users,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import catalogueImg from "@/assets/wp/catalogue-produits.jpg";
+import equipeImg from "@/assets/wp/equipe-apro.jpg";
+import heroImg from "@/assets/wp/hero-accueil.jpg";
+import hotellerieImg from "@/assets/wp/secteur-hotellerie.jpg";
+import restaurationImg from "@/assets/wp/secteur-restauration.jpg";
+import santeImg from "@/assets/wp/secteur-sante.jpg";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import {
@@ -29,14 +42,76 @@ import { useCopiloteStore } from "@/lib/copilote/store";
 import type { ToolResult } from "@/lib/copilote/tools";
 import { cn } from "@/lib/utils";
 
+
 type Upload = { name: string; dataUrl: string; type: string };
 
-const SUGGESTIONS = [
-  "Montre-moi tous les clients",
-  "Crée un client nommé Ahmed Benali",
-  "Quelles pages contient le site web ?",
-  "Bilan d'activité du moment",
+type Scenario = {
+  prompt: string;
+  title: string;
+  hint: string;
+  icon: LucideIcon;
+  image: string;
+  tone: "accent" | "primary" | "success" | "warning";
+};
+
+const SCENARIOS: Scenario[] = [
+  {
+    prompt: "Montre-moi tous les clients",
+    title: "Portefeuille clients",
+    hint: "Liste complète, encours et secteurs",
+    icon: Users,
+    image: equipeImg,
+    tone: "primary",
+  },
+  {
+    prompt: "Crée un client nommé Ahmed Benali",
+    title: "Créer un client",
+    hint: "Fiche créée après confirmation",
+    icon: UserPlus,
+    image: hotellerieImg,
+    tone: "accent",
+  },
+  {
+    prompt: "Quelles pages contient le site web ?",
+    title: "Pages du site",
+    hint: "Aperçu visuel des pages WordPress",
+    icon: Globe,
+    image: heroImg,
+    tone: "success",
+  },
+  {
+    prompt: "Affiche la médiathèque du site",
+    title: "Médiathèque",
+    hint: "Galerie d'images du site client",
+    icon: ImageIcon,
+    image: catalogueImg,
+    tone: "accent",
+  },
+  {
+    prompt: "Bilan d'activité du moment",
+    title: "Bilan d'activité",
+    hint: "Ventes, stock et alertes du jour",
+    icon: BarChart3,
+    image: santeImg,
+    tone: "warning",
+  },
+  {
+    prompt: "Quels produits sont en rupture de stock ?",
+    title: "Alertes de stock",
+    hint: "Produits sous le seuil critique",
+    icon: PackageSearch,
+    image: restaurationImg,
+    tone: "warning",
+  },
 ];
+
+const toneRing: Record<Scenario["tone"], string> = {
+  accent: "text-accent bg-accent-soft",
+  primary: "text-primary bg-primary-soft",
+  success: "text-success bg-success/10",
+  warning: "text-warning bg-warning/10",
+};
+
 
 const readFile = (file: File) =>
   new Promise<Upload>((resolve, reject) => {
@@ -171,7 +246,7 @@ export function CopiloteChat({ compact = false }: { compact?: boolean }) {
     >
       <div className={cn("min-h-0 flex-1 space-y-4 overflow-y-auto p-4", compact ? "text-sm" : "")}>
         {messages.length === 0 && (
-          <div className="space-y-4 py-6 text-center">
+          <div className="space-y-5 py-4 text-center">
             <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
               <Sparkles className="h-5 w-5" />
             </span>
@@ -182,20 +257,25 @@ export function CopiloteChat({ compact = false }: { compact?: boolean }) {
                 client — en langage naturel.
               </p>
             </div>
-            <div className="mx-auto flex max-w-lg flex-wrap justify-center gap-2">
-              {SUGGESTIONS.map((sug) => (
-                <button
-                  key={sug}
-                  type="button"
-                  onClick={() => void sendMessage({ text: sug })}
-                  className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent hover:text-accent"
-                >
-                  {sug}
-                </button>
+            <div
+              className={cn(
+                "mx-auto grid max-w-3xl gap-3 text-left",
+                compact ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+              )}
+            >
+              {SCENARIOS.map((s, i) => (
+                <ScenarioCard
+                  key={s.prompt}
+                  scenario={s}
+                  index={i}
+                  disabled={busy}
+                  onPick={() => void sendMessage({ text: s.prompt })}
+                />
               ))}
             </div>
           </div>
         )}
+
 
         {messages.map((m) => (
           <MessageRow
@@ -224,7 +304,32 @@ export function CopiloteChat({ compact = false }: { compact?: boolean }) {
         <div ref={endRef} />
       </div>
 
+      {messages.length > 0 && (
+        <div className="border-t border-border/70 bg-muted/20 px-3 py-2">
+          <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {SCENARIOS.map((s) => (
+              <button
+                key={s.prompt}
+                type="button"
+                disabled={busy}
+                onClick={() => void sendMessage({ text: s.prompt })}
+                className="press group flex shrink-0 items-center gap-2 rounded-full border border-border bg-card py-1 pr-3 pl-1 text-xs whitespace-nowrap text-muted-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+              >
+                <img
+                  src={s.image}
+                  alt=""
+                  aria-hidden
+                  className="h-6 w-6 rounded-full object-cover ring-1 ring-border"
+                />
+                <span className="font-medium">{s.title}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className={cn("border-t border-border p-3", dragging && "bg-accent-soft")}>
+
         {uploads.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
             {uploads.map((u, i) => (
@@ -301,6 +406,58 @@ export function CopiloteChat({ compact = false }: { compact?: boolean }) {
     </div>
   );
 }
+
+/* ─────────────── carte de scénario ─────────────── */
+
+function ScenarioCard({
+  scenario,
+  index,
+  disabled,
+  onPick,
+}: {
+  scenario: Scenario;
+  index: number;
+  disabled: boolean;
+  onPick: () => void;
+}) {
+  const Icon = scenario.icon;
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onPick}
+      style={{ animationDelay: `${index * 55}ms` }}
+      className="animate-rise card-glow group relative overflow-hidden rounded-2xl border border-border bg-card text-left disabled:opacity-60"
+    >
+      <div className="relative h-20 overflow-hidden">
+        <img
+          src={scenario.image}
+          alt=""
+          aria-hidden
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/55 to-transparent" />
+        <span
+          className={cn(
+            "absolute bottom-2 left-3 flex h-8 w-8 items-center justify-center rounded-xl shadow-soft backdrop-blur",
+            toneRing[scenario.tone],
+          )}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+      </div>
+      <div className="space-y-0.5 px-3 pt-2 pb-3">
+        <p className="text-sm font-semibold text-foreground">{scenario.title}</p>
+        <p className="text-[11px] leading-snug text-muted-foreground">{scenario.hint}</p>
+        <p className="pt-1 text-[11px] font-medium text-accent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          « {scenario.prompt} »
+        </p>
+      </div>
+    </button>
+  );
+}
+
 
 /* ─────────────── rendu d'un message ─────────────── */
 
