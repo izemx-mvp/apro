@@ -59,14 +59,11 @@ function localWpFallback(name: AiToolName, args: ToolArgs, ctx: ExecCtx): ToolRe
     if (!page) return { ok: false, text: "Page introuvable sur le site de démonstration." };
     return {
       ok: true,
-      text: `Contenu actuel de la page « ${page.title} » (démonstration) :`,
-      table: [
-        { label: "Adresse", value: page.slug },
-        { label: "Statut", value: page.status },
-        ...page.blocks.map((b) => ({ label: b.label, value: b.value })),
-      ],
+      text: `Aperçu de la page « ${page.title} » (${ctx.state.wp.url}${page.slug}) :`,
+      preview: pagePreview(ctx.state.wp.url, page),
     };
   }
+
   const mapped = localWpName[name];
   if (!mapped) return { ok: false, text: "Action indisponible sur l'espace de démonstration." };
   return runTool(mapped, args, ctx);
