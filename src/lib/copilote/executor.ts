@@ -3,7 +3,6 @@ import type { AiToolName } from "./ai-tools";
 import { isWriteTool } from "./ai-tools";
 import type { CopiloteState } from "./store";
 import { pagePreview, runTool, type ToolArgs, type ToolName, type ToolResult } from "./tools";
-import { wpAction } from "./wp.functions";
 
 export type ExecCtx = {
   state: CopiloteState;
@@ -111,77 +110,5 @@ export async function executeTool(
     return { ...runTool(name as ToolName, args, ctx), scope };
   }
 
-  try {
-    const result = await wpAction({ data: toWpInput(name, args, ctx) });
-    if (!result.connected) {
-      const fallback = localWpFallback(name, args, ctx);
-      return {
-        ...fallback,
-        scope,
-        text:
-          name === "wp_status"
-            ? fallback.text
-            : `${fallback.text} (site WordPress non connecté : action appliquée à l'espace de démonstration)`,
-      };
-    }
-    return {
-      ok: result.ok,
-      text: result.text,
-      scope,
-      ...(result.table ? { table: result.table } : {}),
-      ...(result.rows ? { rows: result.rows } : {}),
-    };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return {
-      ok: false,
-      scope,
-      text: `Je n'ai pas pu joindre le site web. ${message}`,
-    };
-  }
-}
-
-type WpInputShape = Parameters<typeof wpAction>[0] extends { data: infer D } ? D : never;
-
-function toWpInput(name: AiToolName, args: ToolArgs, ctx: ExecCtx): WpInputShape {
-  const base = { page: args["page"], title: args["title"], content: args["content"] };
-  switch (name) {
-    case "wp_status":
-      return { action: "status" } as WpInputShape;
-    case "wp_list":
-      return {
-        action:
-          args["kind"] === "articles" ? "list_posts" : args["kind"] === "medias" ? "list_media" : "list_pages",
-      } as WpInputShape;
-    case "wp_get_page":
-      return { action: "get_page", page: args["page"] } as WpInputShape;
-    case "wp_update_text": {
-      const block = (args["block"] ?? "").toLowerCase();
-      if (block.includes("titre") && !args["search"]) {
-        return { action: "update_page", page: args["page"], title: args["value"] } as WpInputShape;
-      }
-      return {
-        action: "update_page",
-        page: args["page"],
-        search: args["search"],
-        replace: args["value"],
-        content: args["search"] ? undefined : args["value"],
-      } as WpInputShape;
-    }
-    case "wp_replace_image":
-      return {
-        action: "replace_image",
-        page: args["page"],
-        fileName: ctx.upload?.name ?? args["file"],
-        fileData: ctx.upload?.dataUrl,
-      } as WpInputShape;
-    case "wp_create_page":
-      return { action: "create_page", ...base } as WpInputShape;
-    case "wp_delete_page":
-      return { action: "delete_page", page: args["page"] } as WpInputShape;
-    case "wp_publish":
-      return { action: "publish_page", page: args["page"] } as WpInputShape;
-    default:
-      return { action: "status" } as WpInputShape;
-  }
+  return { ...localWpFallback(name, args, ctx), scope };
 }
