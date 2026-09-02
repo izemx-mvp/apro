@@ -2,7 +2,7 @@ import { formatMAD } from "@/lib/apro-data";
 import type { AiToolName } from "./ai-tools";
 import { isWriteTool } from "./ai-tools";
 import type { CopiloteState } from "./store";
-import { runTool, type ToolArgs, type ToolName, type ToolResult } from "./tools";
+import { pagePreview, runTool, type ToolArgs, type ToolName, type ToolResult } from "./tools";
 import { wpAction } from "./wp.functions";
 
 export type ExecCtx = {
@@ -45,10 +45,17 @@ function localWpFallback(name: AiToolName, args: ToolArgs, ctx: ExecCtx): ToolRe
       text: "Aucun site WordPress réel n'est connecté. Je travaille sur l'espace de démonstration interne.",
       table: [
         { label: "Site de démonstration", value: ctx.state.wp.url },
+        { label: "Thème", value: ctx.state.wp.theme ?? "—" },
         { label: "Pages", value: String(ctx.state.wp.pages.length) },
         { label: "Articles", value: String(ctx.state.wp.posts.length) },
         { label: "Médias", value: String(ctx.state.wp.media.length) },
       ],
+      gallery: ctx.state.wp.pages.map((p) => ({
+        file: p.slug,
+        title: p.title,
+        ...(p.cover ? { src: p.cover } : {}),
+        caption: `${p.status} · maj ${p.updatedAt}`,
+      })),
     };
   }
   if (name === "wp_get_page") {
@@ -59,17 +66,18 @@ function localWpFallback(name: AiToolName, args: ToolArgs, ctx: ExecCtx): ToolRe
     if (!page) return { ok: false, text: "Page introuvable sur le site de démonstration." };
     return {
       ok: true,
-      text: `Contenu actuel de la page « ${page.title} » (démonstration) :`,
-      table: [
-        { label: "Adresse", value: page.slug },
-        { label: "Statut", value: page.status },
-        ...page.blocks.map((b) => ({ label: b.label, value: b.value })),
-      ],
+      text: `Aperçu de la page « ${page.title} » (${ctx.state.wp.url}${page.slug}) :`,
+      preview: pagePreview(ctx.state.wp.url, page),
     };
   }
+
   const mapped = localWpName[name];
   if (!mapped) return { ok: false, text: "Action indisponible sur l'espace de démonstration." };
-  return runTool(mapped, args, ctx);
+  const localArgs: ToolArgs =
+    name === "wp_replace_image" && ctx.upload
+      ? { ...args, file: ctx.upload.name, src: ctx.upload.dataUrl }
+      : args;
+  return runTool(mapped, localArgs, ctx);
 }
 
 /** Exécute un outil demandé par l'IA : permissions → couche d'exécution → vérification. */

@@ -566,6 +566,108 @@ function ToolCard({
                 </table>
               </div>
             )}
+            {output.gallery && output.gallery.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {output.gallery.map((m, j) => (
+                  <figure
+                    key={j}
+                    className="overflow-hidden rounded-lg border border-border bg-card transition-shadow hover:shadow-md"
+                  >
+                    {m.src ? (
+                      <img
+                        src={m.src}
+                        alt={m.title}
+                        loading="lazy"
+                        className="h-24 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-24 w-full items-center justify-center bg-muted text-[10px] font-medium text-muted-foreground">
+                        {m.mime?.includes("pdf") ? "PDF" : "Fichier"}
+                      </div>
+                    )}
+                    <figcaption className="space-y-0.5 px-2 py-1.5">
+                      <p className="truncate text-[11px] font-medium text-foreground">{m.title}</p>
+                      <p className="truncate text-[10px] text-muted-foreground">{m.caption ?? m.file}</p>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            )}
+            {output.preview && (
+              <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+                <div className="flex items-center gap-2 border-b border-border bg-muted/60 px-3 py-2">
+                  <span className="flex gap-1">
+                    <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+                    <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+                    <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+                  </span>
+                  <span className="truncate rounded-md bg-background px-2 py-0.5 text-[10px] text-muted-foreground">
+                    {output.preview.site}
+                    {output.preview.slug === "/" ? "" : output.preview.slug}
+                  </span>
+                  <span
+                    className={cn(
+                      "ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium",
+                      output.preview.status.startsWith("Publi")
+                        ? "bg-success text-success-foreground"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {output.preview.status}
+                  </span>
+                </div>
+                {output.preview.cover && (
+                  <img
+                    src={output.preview.cover}
+                    alt={output.preview.title}
+                    loading="lazy"
+                    className="h-28 w-full object-cover"
+                  />
+                )}
+                <div className="space-y-2 px-3 py-3">
+                  <p className="text-sm font-semibold text-foreground">{output.preview.title}</p>
+                  {output.preview.blocks.map((b, j) =>
+                    b.type === "image" ? (
+                      <div
+                        key={j}
+                        className={cn(
+                          "overflow-hidden rounded-lg border",
+                          b.changed ? "border-primary" : "border-border",
+                        )}
+                      >
+                        {b.src ? (
+                          <img src={b.src} alt={b.label} loading="lazy" className="h-24 w-full object-cover" />
+                        ) : (
+                          <div className="flex h-24 items-center justify-center bg-muted text-[10px] text-muted-foreground">
+                            {b.value}
+                          </div>
+                        )}
+                        <p className="px-2 py-1 text-[10px] text-muted-foreground">
+                          {b.label} · {b.value}
+                        </p>
+                      </div>
+                    ) : (
+                      <div
+                        key={j}
+                        className={cn(
+                          "rounded-lg border px-2 py-1.5",
+                          b.changed ? "border-primary bg-accent-soft" : "border-border bg-muted/30",
+                        )}
+                      >
+                        <p className="text-[10px] tracking-wide text-muted-foreground uppercase">{b.label}</p>
+                        <p className="text-xs text-foreground">{b.value}</p>
+                      </div>
+                    ),
+                  )}
+                  {output.preview.updatedAt && (
+                    <p className="text-[10px] text-muted-foreground">
+                      Dernière mise à jour : {output.preview.updatedAt}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
           </div>
         )}
       </div>
