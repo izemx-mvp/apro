@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Bot, CheckCircle2, Mic, Send, Settings2, TriangleAlert, User } from "lucide-react";
+import { CheckCircle2, Settings2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { Pill, RightDrawer, SectionCard } from "@/components/apro/bits";
+import { CopiloteChat } from "@/components/apro/CopiloteChat";
+import { ActionHistory } from "@/components/apro/CopiloteHistory";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { automationRules, automations, formatMAD } from "@/lib/apro-data";
+import { automationRules, automations } from "@/lib/apro-data";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/copilote")({
