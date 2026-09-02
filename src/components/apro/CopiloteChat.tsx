@@ -427,7 +427,7 @@ function ToolCard({
   toolCallId: string;
   state: string;
   input: Record<string, unknown>;
-  output?: ToolResult;
+  output?: ToolResult | undefined;
   busy: boolean;
   onConfirm: RowProps["onConfirm"];
   onCancel: RowProps["onCancel"];

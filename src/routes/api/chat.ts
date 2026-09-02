@@ -1,5 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from "ai";
+import {
+  convertToModelMessages,
+  stepCountIs,
+  streamText,
+  tool,
+  type ToolSet,
+  type UIMessage,
+} from "ai";
 
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { aiToolSchemas, type AiToolName } from "@/lib/copilote/ai-tools";
@@ -67,7 +74,7 @@ export const Route = createFileRoute("/api/chat")({
               inputSchema: aiToolSchemas[name].inputSchema,
             }),
           ]),
-        );
+        ) as ToolSet;
 
         try {
           const result = streamText({

@@ -116,7 +116,13 @@ export async function executeTool(
             : `${fallback.text} (site WordPress non connecté : action appliquée à l'espace de démonstration)`,
       };
     }
-    return { ok: result.ok, text: result.text, table: result.table, rows: result.rows, scope };
+    return {
+      ok: result.ok,
+      text: result.text,
+      scope,
+      ...(result.table ? { table: result.table } : {}),
+      ...(result.rows ? { rows: result.rows } : {}),
+    };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {
