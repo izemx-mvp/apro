@@ -1,5 +1,5 @@
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from "ai";
+import { lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from "ai";
 import {
   AlertTriangle,
   BarChart3,
@@ -37,7 +37,8 @@ import {
   toolSteps,
   type AiToolName,
 } from "@/lib/copilote/ai-tools";
-import { buildContext, executeTool } from "@/lib/copilote/executor";
+import { executeTool } from "@/lib/copilote/executor";
+import { createMockChatTransport } from "@/lib/copilote/mock-transport";
 import { useCopiloteStore } from "@/lib/copilote/store";
 import type { ToolResult } from "@/lib/copilote/tools";
 import { cn } from "@/lib/utils";
@@ -138,21 +139,9 @@ export function CopiloteChat({ compact = false }: { compact?: boolean }) {
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const transport = useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: "/api/chat",
-        prepareSendMessagesRequest: ({ messages }) => ({
-          body: {
-            messages,
-            context: buildContext(ctxRef.current.state),
-            role: ctxRef.current.role,
-            wpConnected: false,
-          },
-        }),
-      }),
-    [],
-  );
+  // Mode démonstration : les réponses sont générées localement à partir des
+  // données de démo — aucun backend ni clé API requis.
+  const transport = useMemo(() => createMockChatTransport(), []);
 
   const run = useCallback(
     async (name: AiToolName, args: Record<string, unknown>) => {
