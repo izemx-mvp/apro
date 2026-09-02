@@ -139,7 +139,9 @@ function CopilotePage() {
             </div>
           ))}
         </div>
-      </SectionCard>
+        </SectionCard>
+      </div>
+
 
       <RightDrawer open={!!log} onOpenChange={(v) => !v && setLog(null)}>
         {log && (
